@@ -2,293 +2,439 @@
 <html lang="pt-br">
 <head>
 <meta charset="UTF-8">
-<title>Dashboard Ability</title>
+<title>Dashboard Gerencial</title>
 
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
-
-<script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
 <style>
-:root{--primary:#e53935;--dark:#1c1c1c;--gray:#f4f6f9}
-body{margin:0;font-family:'Inter';background:var(--gray);font-size:13px}
-
-header{
-  background:#000;
-  color:#fff;
-  padding:18px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  position:relative;
-  box-shadow:0 4px 12px rgba(0,0,0,0.4);
+body {
+    font-family: 'Segoe UI', Arial;
+    background:#0b0b0b;
+    color:white;
+    margin:0;
 }
 
-header img{
-  position:absolute;
-  left:20px;
-  height:50px;
-  object-fit:contain;
-  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.6));
+header {
+    background:black;
+    padding:15px;
+    display:flex;
+    align-items:center;
+    border-bottom:3px solid red;
 }
 
-.layout{display:flex;height:100vh}
+header img { height:45px; margin-right:10px; }
 
-.sidebar{
-  width:260px;
-  background:var(--dark);
-  color:#fff;
-  padding:12px;
-  overflow-y:auto;
+.container { padding:20px; }
+
+.card {
+    background:#111;
+    padding:15px;
+    margin-bottom:20px;
+    border-radius:12px;
 }
 
-.sidebar select,.sidebar button{
-  width:100%;
-  margin-bottom:8px;
-  padding:6px;
+.filters {
+    display:flex;
+    flex-wrap:wrap;
+    gap:15px;
 }
 
-.main{
-  flex:1;
-  padding:15px;
-  overflow:auto;
+.filter-box {
+    display:flex;
+    flex-direction:column;
 }
 
-.card{
-  background:#fff;
-  padding:12px;
-  border-radius:10px;
-  box-shadow:0 2px 8px rgba(0,0,0,0.08);
-  margin-bottom:10px;
+.filter-box label {
+    font-size:12px;
+    color:#aaa;
 }
 
-.table-container{
-  overflow:auto;
-  max-height:400px;
-  border:1px solid #ddd;
+.filter-box select {
+    padding:6px;
+    background:#1a1a1a;
+    color:white;
+    border:1px solid #333;
+    border-radius:6px;
+    min-width:150px;
 }
 
-th,td{
-  padding:6px;
-  border:1px solid #ddd;
-  font-size:11px;
-  white-space:nowrap;
+button {
+    background:red;
+    color:white;
+    border:none;
+    padding:8px 12px;
+    cursor:pointer;
+    border-radius:6px;
 }
 
-th{
-  background:var(--dark);
-  color:#fff;
+.kpis {
+    display:flex;
+    gap:15px;
 }
 
-/* Responsivo */
-@media(max-width:768px){
-  .layout{flex-direction:column}
-  .sidebar{width:100%}
-  header img{height:40px}
+.kpi {
+    flex:1;
+    background:#1a1a1a;
+    padding:15px;
+    border-left:4px solid red;
 }
+
+.kpi span {
+    font-size:20px;
+    font-weight:bold;
+}
+
+canvas {
+    max-height:300px;
+}
+
+.search-box {
+    margin-bottom:10px;
+}
+
+.search-box input {
+    width:100%;
+    padding:8px;
+    background:#1a1a1a;
+    border:1px solid #333;
+    color:white;
+    border-radius:6px;
+}
+
+.table-container {
+    max-height:400px;
+    overflow:auto;
+    border:1px solid #222;
+    border-radius:8px;
+}
+
+table {
+    width:100%;
+    border-collapse: collapse;
+    font-size:12px;
+}
+
+th {
+    position:sticky;
+    top:0;
+    background: linear-gradient(90deg, #8b0000, #cc0000);
+    color:white;
+    padding:8px;
+    text-transform:uppercase;
+    font-size:11px;
+    cursor:pointer;
+}
+
+td {
+    padding:6px;
+    border-bottom:1px solid #222;
+}
+
+tr:hover { background:#1a1a1a; }
 </style>
 </head>
 
 <body>
 
 <header>
-  <img src="./logo.png" alt="Logo Ability">
-  <span>Ability Tecnologia - Dashboard</span>
+    <img src="logo.png">
+    <h2>Dashboard Gerencial</h2>
 </header>
 
-<div class="layout">
+<div class="container">
 
-<div class="sidebar">
-<input type="file" id="fileInput" accept=".csv">
-
-<h3>Filtros</h3>
-<div id="filtrosContainer"></div>
-<button onclick="adicionarFiltro()">+ Filtro</button>
-<button onclick="limparFiltros()">Limpar</button>
-<button onclick="exportarCSV()">Exportar CSV</button>
-
-<h3>Gráfico</h3>
-<select id="colunaGrafico"></select>
+<div class="card">
+    <input type="file" id="fileInput">
 </div>
 
-<div class="main">
-<div class="card"><b>Total:</b> <span id="total"></span> | <b>Filtrado:</b> <span id="filtrado"></span></div>
-<div class="card" style="height:400px;"><canvas id="grafico"></canvas></div>
-<div class="card"><div class="table-container"><table id="tabela"></table></div></div>
+<div class="card kpis">
+    <div class="kpi">Total<br><span id="total"></span></div>
+    <div class="kpi">Filtradas<br><span id="filtradas"></span></div>
+</div>
+
+<div class="card">
+    <div id="filtros" class="filters"></div>
+    <br>
+    <button onclick="limparFiltros()">Limpar Filtros</button>
+    <button onclick="exportarExcel()">Exportar Excel (Filtrados)</button>
+</div>
+
+<div class="card">
+    <canvas id="graficoTotal"></canvas>
+</div>
+
+<div class="card">
+    <canvas id="graficoFiltrado"></canvas>
+</div>
+
+<div class="card">
+
+<div class="search-box">
+    <input type="text" id="search" placeholder="Buscar na tabela..." onkeyup="buscar()">
+</div>
+
+<div class="table-container">
+    <table id="tabela"></table>
+</div>
+
 </div>
 
 </div>
 
 <script>
-const fileInput = document.getElementById('fileInput');
-const filtrosContainer = document.getElementById('filtrosContainer');
-const colunaGrafico = document.getElementById('colunaGrafico');
-const total = document.getElementById('total');
-const filtrado = document.getElementById('filtrado');
-const tabela = document.getElementById('tabela');
 
-let dados=[], filtrados=[], colunas=[];
-let chart;
+let dados = [];
+let filtrados = [];
+let dadosBusca = [];
+let ordemAsc = true;
 
-colunaGrafico.addEventListener('change', renderGraficos);
-
-fileInput.addEventListener('change', e=>{
-  Papa.parse(e.target.files[0],{
-    header:true,
-    skipEmptyLines:true,
-    complete:r=>{
-      dados=r.data;
-      filtrados=dados;
-      colunas=[...new Set(dados.flatMap(o=>Object.keys(o)))];
-      init();
-    }
-  });
+document.getElementById('fileInput').addEventListener('change', e => {
+    Papa.parse(e.target.files[0], {
+        header:true,
+        complete: res => {
+            dados = res.data.filter(d => Object.keys(d).length > 1);
+            filtrados = [...dados];
+            dadosBusca = [...dados];
+            criarFiltros();
+            atualizar();
+        }
+    });
 });
 
-function init(){
-  colunaGrafico.innerHTML = colunas.map(c=>`<option>${c}</option>`).join('');
-  filtrosContainer.innerHTML='';
-  adicionarFiltro();
-  render();
-}
+function criarFiltros(){
+    let div = document.getElementById('filtros');
+    div.innerHTML = "";
 
-function adicionarFiltro(){
-  const box=document.createElement('div');
+    Object.keys(dados[0]).forEach(col => {
 
-  const colSel=document.createElement('select');
-  colunas.forEach(c=>{
-    let o=document.createElement('option');
-    o.value=c;
-    o.text=c;
-    colSel.appendChild(o);
-  });
+        let box = document.createElement("div");
+        box.className = "filter-box";
 
-  const valSel=document.createElement('select');
-  valSel.multiple=true;
-  valSel.size=5;
+        let label = document.createElement("label");
+        label.innerText = col;
 
-  colSel.onchange=()=>preencherValores(colSel,valSel);
-  valSel.onchange=filtrar;
+        let select = document.createElement("select");
+        select.multiple = true;
+        select.id = "f_" + col;
 
-  preencherValores(colSel,valSel);
+        let valores = [...new Set(dados.map(d => d[col]).filter(v => v))];
 
-  box.appendChild(colSel);
-  box.appendChild(valSel);
-  filtrosContainer.appendChild(box);
-}
+        valores.forEach(v => {
+            let opt = document.createElement("option");
+            opt.value = v;
+            opt.text = v;
+            select.appendChild(opt);
+        });
 
-function preencherValores(colSel,valSel){
-  const vals=[...new Set(dados.map(d=>d[colSel.value]))];
-  valSel.innerHTML='';
-  vals.forEach(v=>{
-    let o=document.createElement('option');
-    o.value=v;
-    o.text=v;
-    valSel.appendChild(o);
-  });
-}
+        select.addEventListener("change", filtrar);
 
-function limparFiltros(){
-  filtrados=dados;
-  filtrosContainer.innerHTML='';
-  adicionarFiltro();
-  render();
+        box.appendChild(label);
+        box.appendChild(select);
+        div.appendChild(box);
+    });
 }
 
 function filtrar(){
-  const filtros=[...document.querySelectorAll('.sidebar select[multiple]')];
-
-  filtrados=dados.filter(row=>{
-    return filtros.every((sel,i)=>{
-      let col=document.querySelectorAll('.sidebar select')[i].value;
-      let vals=[...sel.selectedOptions].map(o=>o.value);
-      return !vals.length || vals.includes(row[col]);
+    filtrados = dados.filter(linha => {
+        return Object.keys(linha).every(col => {
+            let sel = document.getElementById("f_" + col);
+            let valores = Array.from(sel.selectedOptions).map(o => o.value);
+            return valores.length === 0 || valores.includes(linha[col]);
+        });
     });
-  });
 
-  render();
+    atualizarFiltros();
+    dadosBusca = [...filtrados];
+    atualizar();
 }
 
-function render(){
-  total.innerText=dados.length;
-  filtrado.innerText=filtrados.length;
-  tabelaRender();
-  renderGraficos();
+function atualizarFiltros(){
+    Object.keys(dados[0]).forEach(col => {
+
+        let select = document.getElementById("f_" + col);
+        let selecionados = Array.from(select.selectedOptions).map(o => o.value);
+
+        let base = dados.filter(linha => {
+            return Object.keys(linha).every(c => {
+                if(c === col) return true;
+
+                let sel = document.getElementById("f_" + c);
+                let vals = Array.from(sel.selectedOptions).map(o => o.value);
+
+                return vals.length === 0 || vals.includes(linha[c]);
+            });
+        });
+
+        let valoresValidos = [...new Set(base.map(d => d[col]).filter(v => v))];
+
+        select.innerHTML = "";
+
+        valoresValidos.forEach(v => {
+            let opt = document.createElement("option");
+            opt.value = v;
+            opt.text = v;
+
+            if(selecionados.includes(v)){
+                opt.selected = true;
+            }
+
+            select.appendChild(opt);
+        });
+    });
 }
 
-function tabelaRender(){
-  if(!filtrados.length) return;
-
-  let h='<tr>'+colunas.map(c=>`<th>${c}</th>`).join('')+'</tr>';
-  let b=filtrados.slice(0,500).map(r=>
-    '<tr>'+colunas.map(c=>`<td>${r[c]||''}</td>`).join('')+'</tr>'
-  ).join('');
-
-  tabela.innerHTML=h+b;
+function limparFiltros(){
+    document.querySelectorAll("select").forEach(s => s.selectedIndex = -1);
+    filtrados = [...dados];
+    dadosBusca = [...dados];
+    criarFiltros();
+    atualizar();
 }
 
-function renderGraficos(){
-  let col = colunaGrafico.value;
-  if(!col || !filtrados.length) return;
+function buscar(){
+    let termo = document.getElementById('search').value.toLowerCase();
 
-  let count = {};
+    dadosBusca = filtrados.filter(l =>
+        Object.values(l).some(v =>
+            v && v.toLowerCase().includes(termo)
+        )
+    );
 
-  filtrados.forEach(r=>{
-    let v = r[col] || 'Vazio';
-    count[v] = (count[v] || 0) + 1;
-  });
+    tabela();
+}
 
-  const ctx = document.getElementById('grafico').getContext('2d');
-  if(chart) chart.destroy();
+function ordenar(col){
+    dadosBusca.sort((a,b)=>{
+        return ordemAsc
+            ? (a[col] > b[col] ? 1 : -1)
+            : (a[col] < b[col] ? 1 : -1);
+    });
 
-  const ordered = Object.entries(count)
-    .map(([label, value]) => ({label, value}))
-    .sort((a,b)=> b.value - a.value)
-    .slice(0, 20);
+    ordemAsc = !ordemAsc;
+    tabela();
+}
 
-  const labels = ordered.map(o => o.label);
-  const values = ordered.map(o => o.value);
+function atualizar(){
+    total.innerText = dados.length;
+    filtradas.innerText = filtrados.length;
+    tabela();
+    graficoTotalFunc();
+    graficoFiltradoFunc();
+}
 
-  const gradient = ctx.createLinearGradient(0, 0, 0, 300);
-  gradient.addColorStop(0, '#ff6b6b');
-  gradient.addColorStop(1, '#e53935');
+function tabela(){
+    let t = document.getElementById('tabela');
+    t.innerHTML="";
 
-  chart = new Chart(ctx,{
-    type:'bar',
-    data:{
-      labels,
-      datasets:[{
-        data: values,
-        backgroundColor: gradient,
-        borderRadius: 10
-      }]
-    },
-    options:{
-      indexAxis: labels.some(l => l.length > 10) ? 'y' : 'x',
-      responsive:true,
-      maintainAspectRatio:false,
-      plugins:{
-        datalabels:{
-          color:'#fff',
-          font:{weight:'bold', size:11},
-          formatter:(v)=> v>0 ? v : ''
+    if(dadosBusca.length === 0) return;
+
+    let head="<tr>";
+    Object.keys(dadosBusca[0]).forEach(k=>head+=`<th onclick="ordenar('${k}')">${k}</th>`);
+    head+="</tr>";
+    t.innerHTML+=head;
+
+    dadosBusca.forEach(l=>{
+        let row="<tr>";
+        Object.values(l).forEach(v=>row+=`<td>${v}</td>`);
+        row+="</tr>";
+        t.innerHTML+=row;
+    });
+}
+
+function exportarExcel(){
+
+    if(dadosBusca.length === 0){
+        alert("Nenhum dado para exportar!");
+        return;
+    }
+
+    let ws = XLSX.utils.json_to_sheet(dadosBusca);
+    let wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Dados");
+
+    let data = new Date().toISOString().slice(0,10);
+    XLSX.writeFile(wb, `dados_filtrados_${data}.xlsx`);
+}
+
+let chartTotal, chartFiltrado;
+
+function contar(base){
+    let cont = {};
+    base.forEach(d=>{
+        cont[d.status] = (cont[d.status]||0)+1;
+    });
+    return cont;
+}
+
+function gerarTituloFiltros(){
+    let ativos = [];
+
+    Object.keys(dados[0]).forEach(col => {
+        let sel = document.getElementById("f_" + col);
+        let valores = Array.from(sel.selectedOptions).map(o => o.value);
+
+        if(valores.length > 0){
+            ativos.push(`${col}: ${valores.join(", ")}`);
+        }
+    });
+
+    return ativos.length > 0
+        ? ativos.join(" | ")
+        : "Sem filtros aplicados";
+}
+
+function graficoTotalFunc(){
+    let cont = contar(dados);
+
+    if(chartTotal) chartTotal.destroy();
+
+    chartTotal = new Chart(graficoTotal, {
+        type:'bar',
+        data:{
+            labels:Object.keys(cont),
+            datasets:[{
+                data:Object.values(cont),
+                backgroundColor:'rgba(255,0,0,0.85)',
+                borderRadius:10
+            }]
         },
-        legend:{display:false}
-      }
-    },
-    plugins:[ChartDataLabels]
-  });
+        options:{
+            indexAxis:'y',
+            plugins:{
+                legend:{display:false},
+                title:{display:true,text:'Visão Geral'}
+            }
+        }
+    });
 }
 
-function exportarCSV(){
-  let csv=Papa.unparse(filtrados);
-  let blob=new Blob([csv]);
-  let a=document.createElement('a');
-  a.href=URL.createObjectURL(blob);
-  a.download='dados_filtrados.csv';
-  a.click();
+function graficoFiltradoFunc(){
+    let cont = contar(filtrados);
+
+    if(chartFiltrado) chartFiltrado.destroy();
+
+    chartFiltrado = new Chart(graficoFiltrado, {
+        type:'bar',
+        data:{
+            labels:Object.keys(cont),
+            datasets:[{
+                data:Object.values(cont),
+                backgroundColor:'rgba(255,0,0,0.85)',
+                borderRadius:10
+            }]
+        },
+        options:{
+            indexAxis:'y',
+            plugins:{
+                legend:{display:false},
+                title:{display:true,text:gerarTituloFiltros()}
+            }
+        }
+    });
 }
+
 </script>
 
 </body>
